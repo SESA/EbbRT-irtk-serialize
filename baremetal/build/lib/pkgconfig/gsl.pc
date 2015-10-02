@@ -1,0 +1,11 @@
+prefix=/home/jappavoo/Work/EbbRT-ext-libs
+exec_prefix=/home/jappavoo/Work/EbbRT-ext-libs
+libdir=/home/jappavoo/Work/EbbRT-ext-libs/lib
+includedir=/home/jappavoo/Work/EbbRT-ext-libs/include
+GSL_CBLAS_LIB=-lgslcblas
+
+Name: GSL
+Description: GNU Scientific Library
+Version: 1.16
+Libs: -L/home/jappavoo/Work/EbbRT-ext-libs/lib -lgsl ${GSL_CBLAS_LIB} -lm -lm 
+Cflags: -I/home/jappavoo/Work/EbbRT-ext-libs/include
