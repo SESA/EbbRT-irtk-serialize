@@ -10,6 +10,14 @@
 
 #include <ebbrt/Message.h>
 
+#include <irtkReconstructionGPU.h>
+#include <irtkResampling.h>
+#include <irtkRegistration.h>
+#include <irtkImageRigidRegistration.h>
+#include <irtkImageRigidRegistrationWithPadding.h>
+#include <irtkImageFunction.h>
+#include <irtkTransformation.h>
+
 #include "../../src/StaticEbbIds.h"
 
 class Printer : public ebbrt::Messagable<Printer> {
@@ -27,5 +35,18 @@ class Printer : public ebbrt::Messagable<Printer> {
 };
 
 constexpr auto printer = ebbrt::EbbRef<Printer>(kPrinterEbbId);
+
+/*struct POINT3D
+{
+  short x;
+  short y;
+  short z;
+  float value;
+};
+
+typedef std::vector<POINT3D> VOXELCOEFFS;
+typedef std::vector<std::vector<VOXELCOEFFS> > SLICECOEFFS;
+*/
+
 
 #endif  // APPS_HELLOWORLD_BAREMETAL_SRC_PRINTER_H_
