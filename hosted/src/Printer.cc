@@ -18,7 +18,7 @@
 #include <ebbrt/GlobalIdMap.h>
 #include <ebbrt/UniqueIOBuf.h>
 
-EBBRT_PUBLISH_TYPE(, Printer);
+//EBBRT_PUBLISH_TYPE(, Printer);
 
 Printer::Printer() : ebbrt::Messagable<Printer>(kPrinterEbbId) {}
 

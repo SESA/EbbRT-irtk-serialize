@@ -23,6 +23,7 @@
 #include <ebbrt/Message.h>
 #include <ebbrt/UniqueIOBuf.h>
 #include "../../src/StaticEbbIds.h"
+#include "Printer.h"
 
 #include <iostream>
 
@@ -35,20 +36,21 @@ using namespace ebbrt;
 class EbbRTCoeffInit;
 typedef EbbRef<EbbRTCoeffInit> EbbRTCoeffInitEbbRef;
 
-class EbbRTCoeffInit
-    : public SharedEbb<EbbRTCoeffInit>,
-      public Messagable<EbbRTCoeffInit> {
+class EbbRTCoeffInit : public SharedEbb<EbbRTCoeffInit>,
+                       public Messagable<EbbRTCoeffInit> {
 
   irtkReconstruction* reconstructor;
   EbbId ebbid;
   std::string bmnid;
   irtkMatrix mym;
-  
+  std::vector<std::string> vNids;
+  int numNodes;
+
   irtkRealImage _slice;
   irtkRigidTransformation _transformations;
   SLICECOEFFS slicecoeffs;
   bool slice_inside;
-  
+
   // this is used to save and load context
   ebbrt::EventManager::EventContext* emec{nullptr};
 
@@ -57,23 +59,21 @@ class EbbRTCoeffInit
   ebbrt::Promise<void> mypromise;
 
  public:
-  EbbRTCoeffInit(irtkReconstruction* _reconstructor,
-                                 EbbId _ebbid)
-      : Messagable<EbbRTCoeffInit>(_ebbid),
-        reconstructor(_reconstructor) {
+EbbRTCoeffInit(irtkReconstruction* _reconstructor, EbbId _ebbid, int _num)
+    : Messagable<EbbRTCoeffInit>(_ebbid), reconstructor(_reconstructor) {
     ebbid = _ebbid;
     bmnid = "";
+    numNodes = _num;
   }
 
   // Create function that returns a future ebbref
   static ebbrt::Future<EbbRTCoeffInitEbbRef>
-  Create(irtkReconstruction* _reconstructor) {
+      Create(irtkReconstruction* _reconstructor, int num) {
     // calls the constructor in this class and returns a EbbRef
     auto ebbref = SharedEbb<EbbRTCoeffInit>::Create(
-        new EbbRTCoeffInit(_reconstructor, kPrinterEbbId),
-        kPrinterEbbId);
+        new EbbRTCoeffInit(_reconstructor, kPrinterEbbId, num), kPrinterEbbId);
 
-    std::cout << "Here 1 " << std::endl;
+    //std::cout << "Here 1 " << std::endl;
     // returns a future for the EbbRef in AppMain.cc
     return ebbrt::global_id_map
         ->Set(kPrinterEbbId, ebbrt::messenger->LocalNetworkId().ToBytes())
@@ -81,14 +81,14 @@ class EbbRTCoeffInit
         .Then([ebbref](ebbrt::Future<void> f) {
           // f.Get() ensures the gobal_id_map has completed
           f.Get();
-	  std::cout << "Here 2 " << std::endl;
+          //std::cout << "Here 2 " << std::endl;
           return ebbref;
         });
   }
 
   // this uses the void promise to return a future that will
   // get invoked when mypromose gets set with some value
-  ebbrt::Future<void> waitReceive() { return mypromise.GetFuture(); }
+  ebbrt::Future<void> waitReceive() { return std::move(mypromise.GetFuture()); }
 
   void Print(ebbrt::Messenger::NetworkId nid, const char* str);
 
@@ -106,8 +106,11 @@ class EbbRTCoeffInit
   }
 
   void runJob();
+  void runJob2();
+  void runJob3();
   void coeffinit();
   void coeffinit2();
+  void coeffinitParallel();
   
   void destroy() { delete this; }
 };

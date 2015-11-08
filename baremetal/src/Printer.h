@@ -26,6 +26,7 @@ class Printer : public ebbrt::Messagable<Printer> {
 
   static Printer& HandleFault(ebbrt::EbbId id);
 
+  void doNothing();
   void Print(const char* string);
   void ReceiveMessage(ebbrt::Messenger::NetworkId nid,
                       std::unique_ptr<ebbrt::IOBuf>&& buffer);
