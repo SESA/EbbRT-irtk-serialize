@@ -2,8 +2,8 @@
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
 //          http://www.boost.org/LICENSE_1_0.txt)
-#ifndef APPS_PINGPONG_BAREMETAL_SRC_PRINTER_H_
-#define APPS_PINGPONG_BAREMETAL_SRC_PRINTER_H_
+#ifndef APPS_PINGPONG_BAREMETAL_SRC_EBBRTCOEFFINIT_H_
+#define APPS_PINGPONG_BAREMETAL_SRC_EBBRTCOEFFINIT_H_
 
 #include <string>
 #include <string.h>
@@ -18,13 +18,22 @@
 #include <irtkImageFunction.h>
 #include <irtkTransformation.h>
 
-#include "../../src/StaticEbbIds.h"
+//#include "../../src/StaticEbbIds.h"
+using namespace ebbrt;
 
-class Printer : public ebbrt::Messagable<Printer> {
+class EbbRTCoeffInit : public ebbrt::Messagable<EbbRTCoeffInit> {
+    EbbId ebbid;
+
  public:
-  explicit Printer(ebbrt::Messenger::NetworkId nid);
+    explicit EbbRTCoeffInit(ebbrt::Messenger::NetworkId nid, EbbId id)
+    : Messagable<EbbRTCoeffInit>(id), remote_nid_(std::move(nid)) 
+    {
+	ebbid = id;
+    }
 
-  static Printer& HandleFault(ebbrt::EbbId id);
+///    explicit EbbRTCoeffInit(ebbrt::Messenger::NetworkId nid, EbbId id);
+
+  static EbbRTCoeffInit& HandleFault(ebbrt::EbbId id);
 
   void doNothing();
   void Print(const char* string);
@@ -35,7 +44,7 @@ class Printer : public ebbrt::Messagable<Printer> {
   ebbrt::Messenger::NetworkId remote_nid_;
 };
 
-//constexpr auto printer = ebbrt::EbbRef<Printer>(kPrinterEbbId);
+//constexpr auto printer = ebbrt::EbbRef<EbbRTCoeffInit>(kEbbRTCoeffInitEbbId);
 
 /*struct POINT3D
 {

@@ -5,6 +5,7 @@
 
 #include <signal.h>
 #include <thread>
+#include <chrono>
 
 #include <boost/filesystem.hpp>
 
@@ -19,9 +20,6 @@
 #include "EbbRTSliceToVolumeRegistration.h"
 #include "EbbRTCoeffInit.h"
 
-// ebbrt::Runtime runtime;
-// ebbrt::Context c(runtime);
-
 void func1(char** argv) {
   auto bindir = boost::filesystem::system_complete(argv[0]).parent_path() /
                 "/bm/AppMain.elf32";
@@ -31,23 +29,67 @@ void func1(char** argv) {
   ebbrt::ContextActivation activation(c);
 
   irtkReconstruction* reconstructor;
-  int numNodes = 4;
+  int numNodes = 2;
 
   ebbrt::event_manager->Spawn([&reconstructor, bindir, numNodes]() {
     EbbRTCoeffInit::Create(reconstructor, numNodes)
         .Then([bindir, numNodes](ebbrt::Future<EbbRTCoeffInitEbbRef> f) {
           EbbRTCoeffInitEbbRef ref = f.Get();
 
-          // allocated baremetal AppMain.elf32
-          ebbrt::node_allocator->AllocateNode(bindir.string(), numNodes);
+	  std::cout << "#######################################EbbId: "
+                << ref->getEbbId() << std::endl;
 
+      for (int i = 0; i < numNodes; i++) {
+        ebbrt::NodeAllocator::NodeDescriptor nd =
+            ebbrt::node_allocator->AllocateNode(bindir.string(), numNodes, 1);
+
+        nd.NetworkId().Then([ref](
+            ebbrt::Future<ebbrt::Messenger::NetworkId> f) {
+          ebbrt::Messenger::NetworkId nid = f.Get();
+          std::cout << nid.ToString() << std::endl;
+          ref->addNid(nid);
+          // ebbrt::event_manager->Spawn([ref, nid]() { ref->runJob(nid); });
+        });
+      }
+
+      //waiting for all nodes to be initialized
+      ref->waitNodes().Then([ref](ebbrt::Future<void> f) {
+        f.Get();
+        std::cout << "all nodes initialized" << std::endl;
+        ebbrt::event_manager->Spawn([ref]() { ref->runJob(); });
+      });
+
+      //waiting to receive messages from all nodes
+      //ref->waitReceive().Then([ref](ebbrt::Future<void> f) {
+      //f.Get();
+      // std::cout << "runJob2() ended" << std::endl;
+      //ebbrt::active_context->io_service_.stop();
+      //  });
+
+      /*std::cout << "EbbId: " << ref->getEbbId() << std::endl;
+	  for(int i = 0; i < numNodes; i++)
+	  {
+	      // allocated baremetal AppMain.elf32
+	      ebbrt::node_allocator->AllocateNode(bindir.string(), 4, 1, 8);
+	      // std::this_thread::sleep_for(std::chrono::seconds(10));
+	      }*/
+	  
+          /*nd.NetworkId().Then([ref](ebbrt::Future<ebbrt::Messenger::NetworkId>
+	    f) {
+	    ebbrt::Messenger::NetworkId nid = f.Get();
+	    std::this_thread::sleep_for(std::chrono::seconds(10));
+	    std::cout << nid.ToString() << std::endl;
+	    ref->runJob2(nid);
+	    });*/
           // test code to get EbbId
-          std::cout << "EbbId: " << ref->getEbbId() << std::endl;
-
-          ref->waitReceive().Then([ref](ebbrt::Future<void> f) {
-            std::cout << "Running job " << std::endl;
-            ebbrt::event_manager->Spawn([ref]() { ref->runJob2(); });
-          });
+          /*std::cout << "EbbId: " << ref->getEbbId() << std::endl;
+           */
+	  
+/*          ref->waitReceive().Then([ref](ebbrt::Future<void> f) {
+		  std::cout << "runJob2() " << std::endl;
+		  ebbrt::event_manager->Spawn([ref]() { ref->runJob2(); });
+		  });*/
+	  
         });
   });
 
@@ -59,9 +101,10 @@ void func1(char** argv) {
 }
 
 int main(int argc, char** argv) {
-
-  func1(argv);
-//  func1(argv);
+    
+    
+    func1(argv);
+    func1(argv);
 
   // vector<irtkRealImage> stacks;
   // vector<irtkRigidTransformation> stack_transformation;

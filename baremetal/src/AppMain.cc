@@ -14,6 +14,6 @@ void AppMain()
 //bar2.Wait();
 
     //printer->doNothing();
-    printer->Print("ping"); 
+    //printer->Print("ping"); 
     //printer->Print("A 22 serialization::archive 10 0 0 2 2 2 2 2 2 2 2 3 3 3 3");
 }

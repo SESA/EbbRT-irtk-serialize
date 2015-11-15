@@ -489,16 +489,15 @@ void Printer::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
                              std::unique_ptr<ebbrt::IOBuf>&& buffer) {
   auto output = std::string(reinterpret_cast<const char*>(buffer->Data()),
                             buffer->Length());
-  // auto ip = nid.ToBytes().c_str();
-
-  // ebbrt::kprintf("################# Serialization TEST
-  // ###################\n");
-  // ebbrt::kprintf("Received msg => %hhu:%hhu:%hhu:%hhu: %s\n",
+  //auto ip = nid.ToBytes().c_str();
+  
+  //ebbrt::kprintf("################# Serialization TEST ###################\n");
+  //ebbrt::kprintf("Received msg => %hhu:%hhu:%hhu:%hhu: %s\n",
   //               (unsigned char)ip[0], (unsigned char)ip[1],
   //               (unsigned char)ip[2], (unsigned char)ip[3], output.c_str());
-
+  
   if (output[0] == 'E') {
-    irtkRealImage test;
+      irtkRealImage test;
 
     // deserialize
     ebbrt::IOBuf::DataPointer dp = buffer->GetDataPointer();
@@ -536,26 +535,21 @@ void Printer::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
       ebbrt::kprintf("number cpus: %d, mycpu: %d\n", ncpus, theCpu);
 
       // gets current context
-      //ebbrt::EventManager::EventContext context;
+      ebbrt::EventManager::EventContext context;
 
       // atomic type with value 0
-      //std::atomic<size_t> count(0);
+      std::atomic<size_t> count(0);
 
-
-
-      /*for (size_t i = 1; i < ncpus; i++) {
-	  
-	  ebbrt::kprintf("i = %d\n", int(i));
-	  
+      for (size_t i = 0; i < ncpus; i++) {
 	  // spawn jobs on each core using SpawnRemote
 	  ebbrt::event_manager->SpawnRemote([theCpu, ncpus, &count, &context]() {
-		  bar.Wait();
+		  //bar.Wait();
 		  // get my cpu id
-		  //size_t mycpu = ebbrt::Cpu::GetMine();
-		  //ebbrt::kprintf("theCpu: %d, mycpu: %d\n", theCpu, mycpu);
-		  MPMultiEbbCtrRef ctr;
-		  ctr = MPMultiEbbCtr::Create();
-		  ebbrt::event_manager->Spawn([ctr]() {ctr->print();});
+		  size_t mycpu = ebbrt::Cpu::GetMine();
+		  ebbrt::kprintf("theCpu: %d, mycpu: %d\n", theCpu, mycpu);
+		  //MPMultiEbbCtrRef ctr;
+		  //ctr = MPMultiEbbCtr::Create();
+		  //ebbrt::event_manager->Spawn([ctr]() {ctr->print();});
 		  //ctr->print();
 
 		  // atomically increment count
@@ -565,10 +559,10 @@ void Printer::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
 		  bar.Wait();
 
 		  // basically wait until all cores reach this point
-		  while (count < (size_t)(ncpus-1));
+		  while (count < (size_t)ncpus);
 
 		  // the cpu that initiated the SpawnRemote has the SaveContext
-		  if (ebbrt::Cpu::GetMine() == 1) {
+		  if (ebbrt::Cpu::GetMine() == theCpu) {
 		      // activate context will return computation to instruction
 		      // after SaveContext below
 		      ebbrt::event_manager->ActivateContext(std::move(context));
@@ -580,7 +574,7 @@ void Printer::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
       ebbrt::event_manager->SaveContext(context);
 
       ebbrt::kprintf("Context restored...\n");
-      */
+      
       // deserialize
       ebbrt::IOBuf::DataPointer dp = buffer->GetDataPointer();
       char* t = (char*)(dp.Get(buffer->ComputeChainDataLength()));
