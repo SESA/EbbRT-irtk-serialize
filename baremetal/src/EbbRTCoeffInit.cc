@@ -62,6 +62,9 @@ void EbbRTCoeffInit::Print(const char* str) {
   auto len = strlen(str) + 1;
   auto buf = ebbrt::MakeUniqueIOBuf(len);
   snprintf(reinterpret_cast<char*>(buf->MutData()), len, "%s", str);
+
+  ebbrt::kprintf("Sending %d bytes\n", buf->ComputeChainDataLength());
+  
   SendMessage(remote_nid_, std::move(buf));
 }
 
@@ -183,7 +186,7 @@ void runCoeffInit(irtkRealImage& _mask, irtkRealImage& _reconstructed,
                   std::vector<irtkRigidTransformation>& _transformations,
                   std::vector<SLICECOEFFS>& _volcoeffs,
                   std::vector<bool>& _slice_inside_cpu, int start, int end) {
-
+    
   size_t inputIndex = 0;
   for (inputIndex = (size_t)start; inputIndex != (size_t)end; inputIndex++) {
     bool slice_inside;
@@ -569,7 +572,7 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
 
     Print(ts.c_str());
 
-  } else if (output[0] == 'E') {
+  } else if (output[0] == 'Z') {
     irtkRealImage test;
 
     // deserialize
@@ -1077,6 +1080,7 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
     // oa& _slice& _transformations& slicecoeffs& slice_inside;
 
     std::string ts = "C " + ofs.str();
+    ebbrt::kprintf("Sending length: %d\n", ts.length());
     Print(ts.c_str());
   } else if (output[0] == 'F') {
     ebbrt::kprintf("Received msg length: %d bytes\n", buffer->Length());
@@ -1197,16 +1201,16 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
     ia& start& end;
     diff = end - start;
 
-    std::vector<irtkRealImage> _slices(diff);
-    std::vector<irtkRigidTransformation> _transformations(diff);
-    std::vector<SLICECOEFFS> _volcoeffs(diff);
+    std::vector<irtkRealImage> _slices;
+    std::vector<irtkRigidTransformation> _transformations;
+    std::vector<SLICECOEFFS> _volcoeffs;
     std::vector<bool> _slice_inside_cpu;
 
     irtkRealImage _slice, _mask, _reconstructed;
     double _quality_factor;
     size_t _max_slices;
 
-    for (int k = 0; k < diff; k++) {
+/*    for (int k = 0; k < diff; k++) {
       ia& _slices[k];
     }
 
@@ -1216,10 +1220,10 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
 
     for (int k = 0; k < diff; k++) {
       ia& _volcoeffs[k];
-    }
+      }*/
 
-    ia & _slice_inside_cpu;
-
+    ia & _slices & _transformations & _volcoeffs & _slice_inside_cpu;
+    
 //    for (int k = 0; k < diff; k++) {
     //    ia& _slice_inside_cpu[k];
     //}
@@ -1228,8 +1232,19 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
 
     ebbrt::kprintf("Deserialized...\n");
 
+    ebbrt::kprintf("_slices: %d\n", _slices.size());
+    ebbrt::kprintf("_transformations: %d\n", _transformations.size());
+    ebbrt::kprintf("_volcoeffs: %d\n", _volcoeffs.size());
+    ebbrt::kprintf("_slice_inside_cpu: %d\n", _slice_inside_cpu.size());
+
+    //int ende = (int)_slices.size();
+    
+    runCoeffInit(_mask, _reconstructed, _quality_factor, _max_slices,
+		 _slices, _transformations, _volcoeffs,
+		 _slice_inside_cpu, 0, diff);
+    
     // get number of cores/cpus on backend
-    size_t ncpus = ebbrt::Cpu::Count();
+    /*size_t ncpus = ebbrt::Cpu::Count();
 
     // create a spin barrier on all cpus
     static ebbrt::SpinBarrier bar(ncpus);
@@ -1290,14 +1305,23 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
 
     ebbrt::event_manager->SaveContext(context);
 
-    ebbrt::kprintf("Context restored...\n");
+    ebbrt::kprintf("Context restored...\n");*/
+
     // serialize m3
     std::ostringstream ofs;
     boost::archive::text_oarchive oa(ofs);
+    
+    ebbrt::kprintf("start: %d end: %d\n", start, end);
+    ebbrt::kprintf("_slices: %d\n", _slices.size());
+    ebbrt::kprintf("_transformations: %d\n", _transformations.size());
+    ebbrt::kprintf("_volcoeffs: %d\n", _volcoeffs.size());
+    ebbrt::kprintf("_slice_inside_cpu: %d\n", _slice_inside_cpu.size());
 
     oa& start& end& _slices& _transformations& _volcoeffs& _slice_inside_cpu;
 
     std::string ts = "E " + ofs.str();
+    ebbrt::kprintf("ts length: %d\n", ts.length());
+    
     Print(ts.c_str());
   }
 }

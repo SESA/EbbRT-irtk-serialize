@@ -117,7 +117,7 @@ class EbbRTCoeffInit : public SharedEbb<EbbRTCoeffInit>,
     }
   }
 
-  void runJob();
+  void runJob(int);
   void runJob2();
   void runJob3();
   void coeffinit();
