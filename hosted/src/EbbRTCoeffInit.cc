@@ -120,12 +120,12 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
     std::cout << "Parsing it back, received: "
               << buffer->ComputeChainDataLength() << " bytes" << std::endl;
     std::cout << "rvec.size() = " << rvec.size() << std::endl;
-    
+
     recv_counter++;
     std::cout << "recv_counter++" << recv_counter << std::endl;
 
     if (recv_counter == numNodes) {
-	std::cout << "recv_counter == numNodes" << recv_counter << std::endl;
+      std::cout << "recv_counter == numNodes" << recv_counter << std::endl;
       // reactivate context
       ebbrt::event_manager->ActivateContext(std::move(*emec));
     }
@@ -144,33 +144,42 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
 
     std::cout << "start: " << start << " end: " << end << std::endl;
 
-    /*    for(int k = start; k < end; k++) { ia & reconstructor->_slices[k]; }
-        std::cout << "deserialize _slices" << std::endl;
-        for(int k = start; k < end; k++) { ia &
-       reconstructor->_transformations[k]; }
-        std::cout << "deserialize _transformations" << std::endl;
-        for(int k = start; k < end; k++) { ia & reconstructor->_volcoeffs[k]; }
-        std::cout << "deserialize _volcoeffs" << std::endl;*/
+    for (int k = start; k < end; k++) {
+      ia& reconstructor->_slices[k];
+    }
+    std::cout << "deserialize _slices" << std::endl;
+    for (int k = start; k < end; k++) {
+      ia& reconstructor->_transformations[k];
+    }
+    std::cout << "deserialize _transformations" << std::endl;
+    for (int k = start; k < end; k++) {
+      ia& reconstructor->_volcoeffs[k];
+    }
+    std::cout << "deserialize _volcoeffs" << std::endl;
 
     std::vector<bool> _slice_inside_cpu_sub;
-    std::vector<irtkRealImage> _slices_sub;
-    std::vector<irtkRigidTransformation> _transformations_sub;
-    std::vector<SLICECOEFFS> _volcoeffs_sub;
+    // std::vector<irtkRealImage> _slices_sub;
+    // std::vector<irtkRigidTransformation> _transformations_sub;
+    // std::vector<SLICECOEFFS> _volcoeffs_sub;
 
-    ia& _slices_sub& _transformations_sub& _volcoeffs_sub&
-    _slice_inside_cpu_sub;
-    std::cout << "deserialize _slices " << _slices_sub.size() << std::endl;
-    std::cout << "deserialize _transformations" << _transformations_sub.size() << std::endl;
-    std::cout << "deserialize _volcoeffs" << _volcoeffs_sub.size() << std::endl;
+    // ia& _slices_sub& _transformations_sub& _volcoeffs_sub&
+    //_slice_inside_cpu_sub;
+    ia& _slice_inside_cpu_sub;
+    // std::cout << "deserialize _slices " << _slices_sub.size() << std::endl;
+    // std::cout << "deserialize _transformations" <<
+    // _transformations_sub.size()
+    //          << std::endl;
+    // std::cout << "deserialize _volcoeffs" << _volcoeffs_sub.size() <<
+    // std::endl;
 
     int c = 0;
-    
+
     for (int k = start; k < end; k++) {
-	reconstructor->_slice_inside_cpu[k] = _slice_inside_cpu_sub[c];
-	reconstructor->_slices[k] = _slices_sub[c];
-	reconstructor->_transformations[k] = _transformations_sub[c];
-	reconstructor->_volcoeffs[k] = _volcoeffs_sub[c];
-	c++;
+      reconstructor->_slice_inside_cpu[k] = _slice_inside_cpu_sub[c];
+      // reconstructor->_slices[k] = _slices_sub[c];
+      // reconstructor->_transformations[k] = _transformations_sub[c];
+      // reconstructor->_volcoeffs[k] = _volcoeffs_sub[c];
+      c++;
     }
 
     std::cout << "deserialize _slice_inside_cpu" << std::endl;
@@ -180,7 +189,7 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
     //      ->_volcoeffs& reconstructor->_slice_inside_cpu;
 
     recv_counter++;
-    
+
     if (recv_counter == numNodes) {
       // reactivate context
       ebbrt::event_manager->ActivateContext(std::move(*emec));
@@ -220,10 +229,9 @@ void EbbRTCoeffInit::runJob(int size) {
   // get the event manager context and save it
   ebbrt::EventManager::EventContext context;
 
-  std::vector<int> vec; //{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  for(int i = 0; i < size; i ++)
-  {
-      vec.push_back(i);
+  std::vector<int> vec;  //{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  for (int i = 0; i < size; i++) {
+    vec.push_back(i);
   }
 
   for (int i = 0; i < (int)nids.size(); i++) {
@@ -320,10 +328,10 @@ void EbbRTCoeffInit::coeffinit() {
     // char*>(bmnid.c_str()),
     //                     bmnid.size()),
     //    ts.c_str());
-    
+
     std::cout << "Sending to .. " << nids[i].ToString()
               << " size: " << ts.length() << std::endl;
-    
+
     Print(nids[i], ts.c_str());
   }
 
@@ -462,34 +470,35 @@ void EbbRTCoeffInit::coeffinitParallel2() {
 
     oa& start& end;
 
-    /*    for (int j = start; j < end; j++) {
-          oa& reconstructor->_slices[j];
-        }
+    for (int j = start; j < end; j++) {
+      oa& reconstructor->_slices[j];
+    }
 
-        for (int j = start; j < end; j++) {
-          oa& reconstructor->_transformations[j];
-        }
+    for (int j = start; j < end; j++) {
+      oa& reconstructor->_transformations[j];
+    }
 
-        for (int j = start; j < end; j++) {
-          oa& reconstructor->_volcoeffs[j];
-          }*/
+    for (int j = start; j < end; j++) {
+      oa& reconstructor->_volcoeffs[j];
+    }
 
     std::vector<bool> _slice_inside_cpu_sub;
-    std::vector<irtkRealImage> _slices_sub;
-    std::vector<irtkRigidTransformation> _transformations_sub;
-    std::vector<SLICECOEFFS> _volcoeffs_sub;
+    // std::vector<irtkRealImage> _slices_sub;
+    // std::vector<irtkRigidTransformation> _transformations_sub;
+    // std::vector<SLICECOEFFS> _volcoeffs_sub;
 
     for (int j = start; j < end; j++) {
       _slice_inside_cpu_sub.push_back(reconstructor->_slice_inside_cpu[j]);
-      _slices_sub.push_back(reconstructor->_slices[j]);
-      _volcoeffs_sub.push_back(reconstructor->_volcoeffs[j]);
-      _transformations_sub.push_back(reconstructor->_transformations[j]);
+      //_slices_sub.push_back(reconstructor->_slices[j]);
+      //_volcoeffs_sub.push_back(reconstructor->_volcoeffs[j]);
+      //_transformations_sub.push_back(reconstructor->_transformations[j]);
     }
 
-    oa& _slices_sub& _transformations_sub& _volcoeffs_sub&
-    _slice_inside_cpu_sub;
+    // oa& _slices_sub& _transformations_sub& _volcoeffs_sub&
+    //_slice_inside_cpu_sub;
     // oa& reconstructor->_slice_inside_cpu;
 
+    oa& _slice_inside_cpu_sub;
     oa& reconstructor->_reconstructed& reconstructor
         ->_quality_factor& reconstructor->_mask& max_slices;
 

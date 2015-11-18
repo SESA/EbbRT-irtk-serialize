@@ -64,7 +64,7 @@ void EbbRTCoeffInit::Print(const char* str) {
   snprintf(reinterpret_cast<char*>(buf->MutData()), len, "%s", str);
 
   ebbrt::kprintf("Sending %d bytes\n", buf->ComputeChainDataLength());
-  
+
   SendMessage(remote_nid_, std::move(buf));
 }
 
@@ -186,7 +186,7 @@ void runCoeffInit(irtkRealImage& _mask, irtkRealImage& _reconstructed,
                   std::vector<irtkRigidTransformation>& _transformations,
                   std::vector<SLICECOEFFS>& _volcoeffs,
                   std::vector<bool>& _slice_inside_cpu, int start, int end) {
-    
+
   size_t inputIndex = 0;
   for (inputIndex = (size_t)start; inputIndex != (size_t)end; inputIndex++) {
     bool slice_inside;
@@ -1125,51 +1125,54 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
     std::atomic<size_t> count(0);
 
     // get my cpu id
-//    size_t theCpu = ebbrt::Cpu::GetMine();
+    //    size_t theCpu = ebbrt::Cpu::GetMine();
 
-/*
-    for (size_t i = 0; i < ncpus; i++) {
-      // spawn jobs on each core using SpawnRemote
-      ebbrt::event_manager->SpawnRemote(
-          [theCpu, ncpus, &count, &context, &_reconstructed, &_quality_factor,
-           &_mask, &_max_slices, &_slices, &_transformations, &_volcoeffs,
-           &_slice_inside_cpu, i]() {
-            // get my cpu id
-            size_t mycpu = ebbrt::Cpu::GetMine();
+    /*
+        for (size_t i = 0; i < ncpus; i++) {
+          // spawn jobs on each core using SpawnRemote
+          ebbrt::event_manager->SpawnRemote(
+              [theCpu, ncpus, &count, &context, &_reconstructed,
+       &_quality_factor,
+               &_mask, &_max_slices, &_slices, &_transformations, &_volcoeffs,
+               &_slice_inside_cpu, i]() {
+                // get my cpu id
+                size_t mycpu = ebbrt::Cpu::GetMine();
 
-            int start, end, factor;
-            factor = _max_slices / (int)ncpus;
-            start = i * factor;
-            end = i * factor + factor;
-            end = ((size_t)end > _max_slices) ? _max_slices : end;
+                int start, end, factor;
+                factor = _max_slices / (int)ncpus;
+                start = i * factor;
+                end = i * factor + factor;
+                end = ((size_t)end > _max_slices) ? _max_slices : end;
 
-            ebbrt::kprintf("theCpu: %d, mycpu: %d, start: %d, end: %d\n",
-                           theCpu, mycpu, start, end);
+                ebbrt::kprintf("theCpu: %d, mycpu: %d, start: %d, end: %d\n",
+                               theCpu, mycpu, start, end);
 
-            //runCoeffInit(_mask, _reconstructed, _quality_factor, _max_slices,
-	    //           _slices, _transformations, _volcoeffs,
-	    //           _slice_inside_cpu, start, end);
+                //runCoeffInit(_mask, _reconstructed, _quality_factor,
+       _max_slices,
+                //           _slices, _transformations, _volcoeffs,
+                //           _slice_inside_cpu, start, end);
 
-            // atomically increment count
-            count++;
+                // atomically increment count
+                count++;
 
-            // barrier here ensures all cores run until this point
-            bar.Wait();
+                // barrier here ensures all cores run until this point
+                bar.Wait();
 
-            // basically wait until all cores reach this point
-            while (count < (size_t)ncpus)
-              ;
+                // basically wait until all cores reach this point
+                while (count < (size_t)ncpus)
+                  ;
 
-            // the cpu that initiated the SpawnRemote has the SaveContext
-            if (mycpu == theCpu) {
-              // activate context will return computation to instruction
-              // after SaveContext below
-              ebbrt::event_manager->ActivateContext(std::move(context));
-            }
-          },
-          indexToCPU(
-              i));  // if i don't add indexToCPU, one of the cores never run??
-    }*/
+                // the cpu that initiated the SpawnRemote has the SaveContext
+                if (mycpu == theCpu) {
+                  // activate context will return computation to instruction
+                  // after SaveContext below
+                  ebbrt::event_manager->ActivateContext(std::move(context));
+                }
+              },
+              indexToCPU(
+                  i));  // if i don't add indexToCPU, one of the cores never
+       run??
+        }*/
 
     ebbrt::event_manager->SaveContext(context);
 
@@ -1196,21 +1199,21 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
 
     ebbrt::kprintf("Begin deserialization...\n");
     boost::archive::text_iarchive ia(stream);
-    
+
     int start, end, diff;
     ia& start& end;
     diff = end - start;
 
-    std::vector<irtkRealImage> _slices;
-    std::vector<irtkRigidTransformation> _transformations;
-    std::vector<SLICECOEFFS> _volcoeffs;
+    std::vector<irtkRealImage> _slices(diff);
+    std::vector<irtkRigidTransformation> _transformations(diff);
+    std::vector<SLICECOEFFS> _volcoeffs(diff);
     std::vector<bool> _slice_inside_cpu;
 
     irtkRealImage _slice, _mask, _reconstructed;
     double _quality_factor;
     size_t _max_slices;
 
-/*    for (int k = 0; k < diff; k++) {
+    for (int k = 0; k < diff; k++) {
       ia& _slices[k];
     }
 
@@ -1220,11 +1223,13 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
 
     for (int k = 0; k < diff; k++) {
       ia& _volcoeffs[k];
-      }*/
+    }
 
-    ia & _slices & _transformations & _volcoeffs & _slice_inside_cpu;
-    
-//    for (int k = 0; k < diff; k++) {
+    // ia & _slices & _transformations & _volcoeffs & _slice_inside_cpu;
+
+    ia& _slice_inside_cpu;
+
+    //    for (int k = 0; k < diff; k++) {
     //    ia& _slice_inside_cpu[k];
     //}
 
@@ -1237,14 +1242,14 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
     ebbrt::kprintf("_volcoeffs: %d\n", _volcoeffs.size());
     ebbrt::kprintf("_slice_inside_cpu: %d\n", _slice_inside_cpu.size());
 
-    //int ende = (int)_slices.size();
-    
-    runCoeffInit(_mask, _reconstructed, _quality_factor, _max_slices,
-		 _slices, _transformations, _volcoeffs,
-		 _slice_inside_cpu, 0, diff);
-    
+    // int ende = (int)_slices.size();
+
+    // runCoeffInit(_mask, _reconstructed, _quality_factor, _max_slices,
+    //		 _slices, _transformations, _volcoeffs,
+    //		 _slice_inside_cpu, 0, diff);
+
     // get number of cores/cpus on backend
-    /*size_t ncpus = ebbrt::Cpu::Count();
+    size_t ncpus = ebbrt::Cpu::Count();
 
     // create a spin barrier on all cpus
     static ebbrt::SpinBarrier bar(ncpus);
@@ -1265,7 +1270,7 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
       ebbrt::event_manager->SpawnRemote(
           [theCpu, ncpus, &count, &context, &_reconstructed, &_quality_factor,
            &_mask, &_max_slices, &_slices, &_transformations, &_volcoeffs,
-           &_slice_inside_cpu, i, &diff]() {
+           &_slice_inside_cpu, i, diff]() {
             // get my cpu id
             size_t mycpu = ebbrt::Cpu::GetMine();
 
@@ -1305,23 +1310,38 @@ void EbbRTCoeffInit::ReceiveMessage(ebbrt::Messenger::NetworkId nid,
 
     ebbrt::event_manager->SaveContext(context);
 
-    ebbrt::kprintf("Context restored...\n");*/
+    ebbrt::kprintf("Context restored...\n");
 
     // serialize m3
     std::ostringstream ofs;
     boost::archive::text_oarchive oa(ofs);
-    
+
     ebbrt::kprintf("start: %d end: %d\n", start, end);
     ebbrt::kprintf("_slices: %d\n", _slices.size());
     ebbrt::kprintf("_transformations: %d\n", _transformations.size());
     ebbrt::kprintf("_volcoeffs: %d\n", _volcoeffs.size());
     ebbrt::kprintf("_slice_inside_cpu: %d\n", _slice_inside_cpu.size());
 
-    oa& start& end& _slices& _transformations& _volcoeffs& _slice_inside_cpu;
+    oa& start& end;
+
+    for (int j = 0; j < diff; j++) {
+      oa& _slices[j];
+    }
+
+    for (int j = 0; j < diff; j++) {
+      oa& _transformations[j];
+    }
+
+    for (int j = 0; j < diff; j++) {
+      oa& _volcoeffs[j];
+    }
+
+    //& _slices& _transformations& _volcoeffs& _slice_inside_cpu;
+    oa& _slice_inside_cpu;
 
     std::string ts = "E " + ofs.str();
     ebbrt::kprintf("ts length: %d\n", ts.length());
-    
+
     Print(ts.c_str());
   }
 }
