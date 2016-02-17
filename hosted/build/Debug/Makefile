@@ -1,4 +1,4 @@
-EBBRT_BUILDTYPE=Debug
+EBBRT_BUILDTYPE=DebugLto
 
 include $(abspath ../build.mk)
 

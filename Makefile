@@ -4,7 +4,7 @@
 
 .PHONY: all Release Debug
 
-all: Release 
+all: Release Debug
 
 Release:
 	$(MAKE) -C hosted/build/Release 
